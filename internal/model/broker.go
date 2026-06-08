@@ -12,6 +12,10 @@ func NewBroker(id string, p *Partition) *Broker {
 	}
 }
 
+func (b *Broker) Len() int {
+	return b.Partition.Len()
+}
+
 func (b *Broker) Append(m *Message) {
 	b.Partition.Append(m) // it just appends the message
 }

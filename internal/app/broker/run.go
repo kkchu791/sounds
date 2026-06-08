@@ -12,8 +12,14 @@ func Run() {
 	log.Println("Broker Listening on port 5001")
 
 	// create a new server with a new partition
-	server := NewServer("broker-0", model.NewPartition())
+	server := NewServer(
+		"broker-1",
+		model.NewPartition(),
+		false,
+		"localhost:5002",
+	)
 
+	http.HandleFunc("/read", server.ReplicateHandler)
 	http.HandleFunc("/append", server.AppendHandler)
 	http.HandleFunc("/read", server.ReadHandler)
 	log.Fatal(http.ListenAndServe(":5001", nil))

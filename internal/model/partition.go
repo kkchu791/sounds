@@ -12,6 +12,10 @@ func NewPartition() *Partition {
 	}
 }
 
+func (p *Partition) Len() int {
+	return len(p.messages)
+}
+
 func (p *Partition) Append(m *Message) {
 	p.messages = append(p.messages, m)
 }
@@ -22,5 +26,6 @@ func (p *Partition) Read(offset int) (*Message, error) {
 		return nil, err
 	}
 
+	// this reads one line from the partition
 	return p.messages[offset], nil
 }
