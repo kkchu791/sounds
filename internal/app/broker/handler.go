@@ -34,7 +34,7 @@ func (s *Server) ReplicateHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		batchLimit := min(offset+10, s.broker.Len())
+		batchLimit := min(offset+10, s.broker.Partition.Len())
 
 		msgs := make([]*model.Message, 0, 10)
 		for i := offset; i < batchLimit; i++ {
