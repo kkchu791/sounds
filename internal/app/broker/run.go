@@ -3,25 +3,42 @@ package broker
 import (
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/kkchu791/sounds/internal/model"
 )
 
 // sets up the server
 func Run() {
-	log.Println("Broker Listening on port 5001")
 
-	// create a new server with a new partition
+	id := os.Getenv("BROKER_ID")                               // "broker-0" or "broker-1"
+	isLeader, err := strconv.ParseBool(os.Getenv("IS_LEADER")) // "true" or "false"
+	port := os.Getenv("BROKER_PORT")                           // "5001" or "5002"
+	leaderAddr := os.Getenv("LEADER_ADDR")                     // "localhost:5001" (empty if leader)
+
+	if err != nil {
+		log.Fatalf("invalid IS_LEADER value: %s", err)
+	}
+
+	log.Printf("Broker Listening on port: %s", port)
+
+	// create a customized broker based on env var
 	server := NewServer(
-		"broker-1",
+		id,
 		model.NewPartition(),
-		false,
-		"localhost:5002",
+		isLeader,
+		leaderAddr,
 	)
 
-	http.HandleFunc("/read", server.ReplicateHandler)
+	// this is for followers to constantly ping the leaders for replication
+	if !server.isLeader {
+		r := &Replicator{server: server, currOffset: 0}
+		go r.Start()
+	}
+
+	http.HandleFunc("/replicate", server.ReplicateHandler)
 	http.HandleFunc("/append", server.AppendHandler)
 	http.HandleFunc("/read", server.ReadHandler)
-	log.Fatal(http.ListenAndServe(":5001", nil))
-
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
