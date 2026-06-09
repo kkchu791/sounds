@@ -12,14 +12,12 @@ import (
 
 type Server struct {
 	broker     *model.Broker
-	isLeader   bool
 	leaderAddr string
 }
 
-func NewServer(ID string, p *model.Partition, isLeader bool, leaderAddr string) *Server {
+func NewServer(id string, p *model.Partition, isLeader bool, leaderAddr string) *Server {
 	return &Server{
-		broker:     model.NewBroker(ID, p),
-		isLeader:   isLeader,
+		broker:     model.NewBroker(id, p, isLeader),
 		leaderAddr: leaderAddr,
 	}
 }

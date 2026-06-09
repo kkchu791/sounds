@@ -32,7 +32,7 @@ func Run() {
 	)
 
 	// this is for followers to constantly ping the leaders for replication
-	if !server.isLeader {
+	if !server.broker.IsLeader {
 		r := &Replicator{server: server, currOffset: 0}
 		go r.Start()
 	}
