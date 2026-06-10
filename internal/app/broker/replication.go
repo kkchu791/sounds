@@ -26,7 +26,20 @@ func (r *Replicator) Replicate() {
 
 	// does a GET request on the leader address
 	url := fmt.Sprintf("http://%s/replicate?offset=%d", r.server.leaderAddr, r.currOffset)
-	resp, err := http.Get(url)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Printf("failed to create request: %s", err)
+		return
+	}
+
+	req.Header.Add("X-Broker-ID", r.server.broker.ID)
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	resp, err := client.Do(req)
 
 	if err != nil {
 		log.Printf("replication error: %s", err)
@@ -35,13 +48,23 @@ func (r *Replicator) Replicate() {
 
 	defer resp.Body.Close()
 
-	var messages []*model.Message
-	json.NewDecoder(resp.Body).Decode(&messages)
+	var rr model.ReplicationResponse
+	err = json.NewDecoder(resp.Body).Decode(&rr)
+	if err != nil {
+		log.Printf("failed to decode replication response: %s", err)
+		return
+	}
 
-	for _, msg := range messages {
+	for _, msg := range rr.Messages {
 		r.server.broker.Append(msg)
 		r.currOffset++
 	}
 
-	log.Printf("replicated %d messages, now at offset %d", len(messages), r.currOffset)
+	// you need update HWM for the follower too here
+
+	if rr.HWM > r.server.broker.HWM {
+		r.server.broker.HWM = rr.HWM
+	}
+
+	log.Printf("replicated %d messages, now at offset %d, HWM: %d", len(rr.Messages), r.currOffset, r.server.broker.HWM)
 }

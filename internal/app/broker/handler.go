@@ -32,6 +32,11 @@ func (s *Server) ReplicateHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
+		followerID := req.Header.Get("X-Broker-ID")
+
+		s.broker.UpdateFollowerOffset(followerID, offset)
+
+		// get data from partition
 		batchLimit := min(offset+10, s.broker.Partition.Len())
 
 		msgs := make([]*model.Message, 0, 10)
@@ -47,7 +52,13 @@ func (s *Server) ReplicateHandler(w http.ResponseWriter, req *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(msgs)
+
+		rr := model.ReplicationResponse{
+			HWM:      s.broker.HWM,
+			Messages: msgs,
+		}
+
+		json.NewEncoder(w).Encode(rr)
 	} else {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
