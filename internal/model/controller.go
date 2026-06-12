@@ -14,6 +14,7 @@ type PartitionInfo struct {
 }
 
 type BrokerInfo struct {
+	ID       string
 	Address  string
 	LastSeen time.Time
 }
