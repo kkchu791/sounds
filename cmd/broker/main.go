@@ -6,7 +6,6 @@ import (
 
 func main() {
 	broker.Run()
-
 }
 
 // func handleError(err error) {
