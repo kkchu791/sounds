@@ -37,10 +37,11 @@ func (s *Server) ReplicateHandler(w http.ResponseWriter, req *http.Request) {
 		s.broker.UpdateFollowerOffset(followerID, offset)
 
 		// get data from partition
-		batchLimit := min(offset+10, s.broker.Partition.Len())
+		batchLimit := 10
+		batchOffset := min(offset+batchLimit, s.broker.Partition.Len())
 
-		msgs := make([]*model.Message, 0, 10)
-		for i := offset; i < batchLimit; i++ {
+		msgs := make([]*model.Message, 0, batchLimit)
+		for i := offset; i < batchOffset; i++ {
 			msg, err := s.broker.Read(i)
 			if err != nil {
 				http.Error(w, "had some trouble reading", http.StatusBadRequest)
