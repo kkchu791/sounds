@@ -1,10 +1,14 @@
 package model
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type Controller struct {
 	Brokers    map[string]*BrokerInfo
 	Partitions map[string]*PartitionInfo
+	mu         sync.Mutex
 }
 
 type PartitionInfo struct {

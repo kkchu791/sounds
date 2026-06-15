@@ -17,7 +17,9 @@ func Run() {
 
 	log.Printf("Broker Listening on port: %s", port)
 
+	// this happens first
 	resp, err := Register(id, brokerAddr, controllerAddr)
+
 	if err != nil {
 		log.Fatalf("failed to register with controller: %s", err)
 	}
