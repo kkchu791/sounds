@@ -14,9 +14,9 @@ type PartitionInfo struct {
 }
 
 type BrokerInfo struct {
-	ID       string
-	Address  string
-	LastSeen time.Time
+	BrokerID   string
+	BrokerAddr string
+	LastSeen   time.Time
 }
 
 func NewController() *Controller {

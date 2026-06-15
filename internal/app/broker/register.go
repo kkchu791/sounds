@@ -3,6 +3,7 @@ package broker
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -31,7 +32,7 @@ func Register(brokerID, brokerAddr, controllerAddr string) (*RegisterResponse, e
 		return nil, err
 	}
 
-	resp, err := http.Post(controllerAddr+"/register", "application/json", &buf)
+	resp, err := http.Post("http://"+controllerAddr+"/register", "application/json", &buf)
 	if err != nil {
 		log.Printf("post failed: %v", err)
 		return nil, err
@@ -45,6 +46,8 @@ func Register(brokerID, brokerAddr, controllerAddr string) (*RegisterResponse, e
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println(&res)
 
 	return &res, nil
 

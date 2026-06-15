@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -43,26 +44,34 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, req *http.Request) {
 
 		bi.LastSeen = time.Now()
 
-		s.Controller.Brokers[bi.ID] = bi
+		s.Controller.Brokers[bi.BrokerID] = bi
 
 		rr := &RegisterResponse{}
 		if _, exists := s.Controller.Partitions[partitionID]; !exists {
 			s.Controller.Partitions[partitionID] = &model.PartitionInfo{
-				LeaderID: bi.ID,
-				ISR:      []string{bi.ID},
-				Replicas: []string{bi.ID},
+				LeaderID: bi.BrokerID,
+				ISR:      []string{bi.BrokerID},
+				Replicas: []string{bi.BrokerID},
 			}
 
 			rr.IsLeader = true
 
+			leaderID := s.Controller.Partitions[partitionID].LeaderID
+			log.Println(leaderID)
+			log.Printf("it ran the leader code in the if block: %+v", rr)
+
 		} else {
 
 			partition := s.Controller.Partitions[partitionID]
-			partition.Replicas = append(partition.Replicas, bi.ID)
+			partition.Replicas = append(partition.Replicas, bi.BrokerID)
 
 			rr.IsLeader = false
 			leaderID := s.Controller.Partitions[partitionID].LeaderID
-			rr.LeaderAddr = s.Controller.Brokers[leaderID].Address
+			leaderAddr := s.Controller.Brokers[leaderID].BrokerAddr
+			rr.LeaderAddr = leaderAddr
+
+			log.Printf("it ran the follower code: %+v", rr)
+			log.Printf("leaderID: %s, leaderAddr: %s", leaderID, leaderAddr)
 		}
 
 		rr.PartitionID = partitionID

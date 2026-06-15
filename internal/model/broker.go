@@ -3,7 +3,6 @@ package model
 import (
 	"log"
 	"math"
-	"slices"
 	"sync"
 )
 
@@ -22,7 +21,7 @@ func NewBroker(id string, p *Partition, isLeader bool) *Broker {
 		ID:              id,
 		Partition:       p,
 		IsLeader:        isLeader,
-		HWM:             0,
+		HWM:             -1,
 		FollowerOffsets: make(map[string]int),
 		ISR:             make([]string, 0),
 	}
@@ -41,11 +40,11 @@ func (b *Broker) UpdateFollowerOffset(followerID string, offset int) {
 
 	bestMin := math.MaxInt
 
-	//only loop througth the ISR and determine best min from them
-	for fID, fOffset := range b.FollowerOffsets {
-		if slices.Contains(b.ISR, fID) {
-			bestMin = min(fOffset, bestMin)
-		}
+	//TODO: only loop througth the ISR and determine best min from them
+	for _, fOffset := range b.FollowerOffsets {
+		// if slices.Contains(b.ISR, fID) {
+		bestMin = min(fOffset, bestMin)
+		// }
 	}
 
 	b.HWM = bestMin - 1
@@ -58,7 +57,7 @@ func (b *Broker) Len() int {
 }
 
 func (b *Broker) Append(m *Message) {
-	b.Partition.Append(m) // it just appends the message
+	b.Partition.Append(m)
 }
 
 func (b *Broker) Read(offset int) (*Message, error) {

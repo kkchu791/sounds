@@ -4,31 +4,29 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/kkchu791/sounds/internal/model"
 )
 
 // sets up the server
 func Run() {
-
-	id := os.Getenv("BROKER_ID")                               // "broker-0" or "broker-1"
-	isLeader, err := strconv.ParseBool(os.Getenv("IS_LEADER")) // "true" or "false"
-	port := os.Getenv("BROKER_PORT")                           // "5001" or "5002"
-	leaderAddr := os.Getenv("LEADER_ADDR")                     // "localhost:5001" (empty if leader)
-
-	if err != nil {
-		log.Fatalf("invalid IS_LEADER value: %s", err)
-	}
+	id := os.Getenv("BROKER_ID")                   // "broker-0" or "broker-1"
+	brokerAddr := os.Getenv("BROKER_ADDR")         // "localhost:5002" or "127.0.0.1:5001"
+	port := os.Getenv("BROKER_PORT")               // "5001" or "5002"
+	controllerAddr := os.Getenv("CONTROLLER_ADDR") // "localhost:5001" (empty if leader)
 
 	log.Printf("Broker Listening on port: %s", port)
 
-	// create a customized broker based on env var
+	resp, err := Register(id, brokerAddr, controllerAddr)
+	if err != nil {
+		log.Fatalf("failed to register with controller: %s", err)
+	}
+
 	server := NewServer(
 		id,
 		model.NewPartition(),
-		isLeader,
-		leaderAddr,
+		resp.IsLeader,
+		resp.LeaderAddr,
 	)
 
 	// this is for followers to constantly ping the leaders for replication
