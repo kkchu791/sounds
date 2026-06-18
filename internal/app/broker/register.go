@@ -9,14 +9,14 @@ import (
 )
 
 type RegisterRequest struct {
-	BrokerID   string
-	BrokerAddr string
+	BrokerID   string `json:"broker_id"`
+	BrokerAddr string `json:"broker_addr"`
 }
 
 type RegisterResponse struct {
-	IsLeader    bool
-	LeaderAddr  string
-	PartitionID string
+	IsLeader    bool   `json:"is_leader"`
+	LeaderAddr  string `json:"leader_addr"`
+	PartitionID string `json:"partition_id"`
 }
 
 func Register(brokerID, brokerAddr, controllerAddr string) (*RegisterResponse, error) {
