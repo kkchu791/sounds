@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kkchu791/sounds/internal/model"
+	"github.com/kkchu791/sounds/internal/domain/model"
 )
 
 type Server struct {

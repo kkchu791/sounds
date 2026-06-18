@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/kkchu791/sounds/internal/model"
+	"github.com/kkchu791/sounds/internal/domain/model"
 )
 
 // sets up the server
