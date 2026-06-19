@@ -37,6 +37,10 @@ func Run() {
 		go r.Start()
 	}
 
+	// this is for pinging the controller to let it know this broker is alive
+	hb := &HeartbeatClient{ID: id, ControllerAddr: controllerAddr}
+	go hb.Start()
+
 	http.HandleFunc("/replicate", server.ReplicateHandler)
 	http.HandleFunc("/append", server.AppendHandler)
 	http.HandleFunc("/read", server.ReadHandler)

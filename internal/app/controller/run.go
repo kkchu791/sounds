@@ -11,6 +11,7 @@ func Run() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/register", server.RegisterHandler)
+	mux.HandleFunc("/heartbeat", server.HeartbeatHandler)
 
 	httpServer := &http.Server{
 		Addr:         ":9000",
