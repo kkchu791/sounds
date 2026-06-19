@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"sync"
 	"time"
 )
@@ -87,4 +88,20 @@ func (c *Controller) RegisterBroker(i string, a string, p string) (*RegisterResu
 		LeaderAddr:  leaderAddr,
 		PartitionID: p,
 	}, nil
+}
+
+func (c *Controller) UpdateLastSeen(id string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	// business logic of updating the state of broker
+
+	_, exists := c.Brokers[id]
+
+	if exists {
+		c.Brokers[id].LastSeen = time.Now()
+	} else {
+		return errors.New("broker not found")
+	}
+
+	return nil
 }
