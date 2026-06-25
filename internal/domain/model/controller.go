@@ -149,8 +149,9 @@ func (c *Controller) HandleDeadBroker(brokerID string) error {
 	}
 
 	for id, p := range c.Partitions {
-		idx := slices.Index(p.ISR, brokerID)
-		p.ISR = slices.Delete(p.ISR, idx, idx+1)
+		if idx := slices.Index(p.ISR, brokerID); idx != -1 {
+			p.ISR = slices.Delete(p.ISR, idx, idx+1)
+		}
 
 		if brokerID == p.LeaderID {
 			var newLeader string
@@ -171,8 +172,10 @@ func (c *Controller) HandleDeadBroker(brokerID string) error {
 			p.LeaderID = newLeader
 
 			fmt.Printf("Leader for partition %s changed from %s to %s\n", id, brokerID, newLeader)
-			fmt.Printf("Current ISR fpr partition %s: %v \n", id, p.ISR)
+			fmt.Printf("Current ISR for partition %s: %v \n", id, p.ISR)
 			fmt.Printf("Current Replicas for partition %s: %v \n", id, p.Replicas)
+		} else {
+			fmt.Printf("Follower %s removed from partition %s. Current ISR: %s and Replicas: %s \n", brokerID, id, p.ISR, p.Replicas)
 		}
 
 	}
