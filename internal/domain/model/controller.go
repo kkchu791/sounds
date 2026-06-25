@@ -2,9 +2,13 @@ package model
 
 import (
 	"errors"
+	"fmt"
+	"slices"
 	"sync"
 	"time"
 )
+
+const NO_LEADER = ""
 
 type Controller struct {
 	Brokers    map[string]*BrokerInfo
@@ -45,6 +49,16 @@ func (c *Controller) addBroker(id string, addr string) {
 	}
 
 	c.Brokers[id] = &bi
+}
+
+func (c *Controller) removeBroker(id string) error {
+	if _, exists := c.Brokers[id]; exists {
+		delete(c.Brokers, id)
+	} else {
+		return errors.New("can't delete, no broker found")
+	}
+
+	return nil
 }
 
 func (c *Controller) addPartition(id string, partitionID string) bool {
@@ -104,4 +118,65 @@ func (c *Controller) UpdateLastSeen(id string) error {
 	}
 
 	return nil
+}
+
+func (c *Controller) GetDeadBrokers(timeout time.Duration) []string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	dead := make([]string, 0)
+
+	for id, val := range c.Brokers {
+		// fmt.Printf("this is broker: %v time since last seen value: %v \n", id, time.Since(val.LastSeen))
+		// fmt.Printf("this is the configuration timeout we have: %v \n", timeout)
+		if time.Since(val.LastSeen) > timeout {
+			dead = append(dead, id)
+		}
+	}
+
+	fmt.Printf("how many dead brokers: %v \n", dead)
+
+	return dead
+}
+
+func (c *Controller) HandleDeadBroker(brokerID string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	err := c.removeBroker(brokerID)
+	if err != nil {
+		return err
+	}
+
+	for id, p := range c.Partitions {
+		idx := slices.Index(p.ISR, brokerID)
+		p.ISR = slices.Delete(p.ISR, idx, idx+1)
+
+		if brokerID == p.LeaderID {
+			var newLeader string
+
+			if len(p.ISR) > 0 {
+				newLeader = p.ISR[0]
+			} else if len(p.Replicas) > 0 {
+				for _, r := range p.Replicas {
+					if r != brokerID {
+						newLeader = r
+						break
+					}
+				}
+			} else {
+				newLeader = NO_LEADER
+			}
+
+			p.LeaderID = newLeader
+
+			fmt.Printf("Leader for partition %s changed from %s to %s\n", id, brokerID, newLeader)
+			fmt.Printf("Current ISR fpr partition %s: %v \n", id, p.ISR)
+			fmt.Printf("Current Replicas for partition %s: %v \n", id, p.Replicas)
+		}
+
+	}
+
+	return nil
+
 }

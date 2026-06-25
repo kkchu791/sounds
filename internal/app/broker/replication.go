@@ -23,7 +23,6 @@ func (r *Replicator) Start() {
 }
 
 func (r *Replicator) Replicate() {
-
 	// does a GET request on the leader address
 	url := fmt.Sprintf("http://%s/replicate?offset=%d", r.server.leaderAddr, r.currOffset)
 
