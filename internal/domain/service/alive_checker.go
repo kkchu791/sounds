@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -19,13 +20,21 @@ func (ac *AliveChecker) Start() {
 		deadBrokers := ac.Controller.GetDeadBrokers(ac.Timeout)
 		for _, brokerID := range deadBrokers {
 
-			err := ac.Controller.HandleDeadBroker(brokerID)
+			bcID, err := ac.HandleDeadBroker(brokerID)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
 
-			//ac.promoteNewleader
+			c := controller.NewClient()
+			resp, err := c.Promote(bcID, bcAddr)
+
+			//Cmodel. Update Leader in State if Success
+			if resp.ok {
+				ac.Controller.UpdateLeader(bcID)
+			} else {
+				fmt.Printf("failed to promote leader:", bcID)
+			}
 		}
 	}
 }
