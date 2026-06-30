@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/kkchu791/sounds/internal/domain/model"
+	"github.com/kkchu791/sounds/internal/infra/http/controller"
 )
 
 type AliveChecker struct {
@@ -20,20 +21,23 @@ func (ac *AliveChecker) Start() {
 		deadBrokers := ac.Controller.GetDeadBrokers(ac.Timeout)
 		for _, brokerID := range deadBrokers {
 
-			bcID, err := ac.HandleDeadBroker(brokerID)
+			bcID, pID, err := ac.Controller.HandleDeadBroker(brokerID)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
 
-			c := controller.NewClient()
-			resp, err := c.Promote(bcID, bcAddr)
+			bcAddr := ac.Controller.Brokers[bcID].BrokerAddr
+			isr := ac.Controller.Partitions[pID].ISR
+			c := controller.NewClient(bcAddr)
+			pr, err := c.Promote(pID, isr)
 
-			//Cmodel. Update Leader in State if Success
-			if resp.ok {
-				ac.Controller.UpdateLeader(bcID)
+			fmt.Print(pr)
+			// Cmodel. Update Leader in State if Success
+			if pr.Status == "ok" {
+				ac.Controller.UpdateLeader(bcID, pID)
 			} else {
-				fmt.Printf("failed to promote leader:", bcID)
+				fmt.Printf("failed to promote leader: %s", bcID)
 			}
 		}
 	}

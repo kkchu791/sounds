@@ -124,62 +124,73 @@ func (c *Controller) GetDeadBrokers(timeout time.Duration) []string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	dead := make([]string, 0)
+	deadBrokers := make([]string, 0)
 
 	for id, val := range c.Brokers {
 		// fmt.Printf("this is broker: %v time since last seen value: %v \n", id, time.Since(val.LastSeen))
 		// fmt.Printf("this is the configuration timeout we have: %v \n", timeout)
 		if time.Since(val.LastSeen) > timeout {
-			dead = append(dead, id)
+			deadBrokers = append(deadBrokers, id)
 		}
 	}
 
-	fmt.Printf("how many dead brokers: %v \n", dead)
+	fmt.Printf("how many dead brokers: %v \n", deadBrokers)
 
-	return dead
+	return deadBrokers
 }
 
-func (c *Controller) HandleDeadBroker(brokerID string) error {
+func (c *Controller) HandleDeadBroker(brokerID string) (string, string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	err := c.removeBroker(brokerID)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
+	var bc string
+	var pID string
 	for id, p := range c.Partitions {
 		if idx := slices.Index(p.ISR, brokerID); idx != -1 {
 			p.ISR = slices.Delete(p.ISR, idx, idx+1)
 		}
 
 		if brokerID == p.LeaderID {
-			var newLeader string
-
 			if len(p.ISR) > 0 {
-				newLeader = p.ISR[0]
+				bc = p.ISR[0]
 			} else if len(p.Replicas) > 0 {
 				for _, r := range p.Replicas {
 					if r != brokerID {
-						newLeader = r
+						bc = r
 						break
 					}
 				}
 			} else {
-				newLeader = NO_LEADER
+				bc = NO_LEADER
 			}
 
-			p.LeaderID = newLeader
-
-			fmt.Printf("Leader for partition %s changed from %s to %s\n", id, brokerID, newLeader)
+			fmt.Printf("Potential Leader for partition %s changed from %s to %s\n", id, brokerID, bc)
 			fmt.Printf("Current ISR for partition %s: %v \n", id, p.ISR)
 			fmt.Printf("Current Replicas for partition %s: %v \n", id, p.Replicas)
 		} else {
 			fmt.Printf("Follower %s removed from partition %s. Current ISR: %s and Replicas: %s \n", brokerID, id, p.ISR, p.Replicas)
 		}
 
+		pID = id
+
 	}
 
-	return nil
+	return bc, pID, nil
 
+}
+
+func (c *Controller) UpdateLeader(bcID, pID string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	pi := c.Partitions[pID]
+	pi.LeaderID = bcID
+
+	fmt.Printf("partition %s's leader has been updated to: %s \n", pID, bcID)
+	fmt.Println("promotion completed, epoch ended")
 }
