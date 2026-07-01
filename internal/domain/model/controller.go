@@ -73,7 +73,9 @@ func (c *Controller) addPartition(id string, partitionID string) bool {
 
 		return true // a leader
 	} else {
-		pi.Replicas = append(pi.Replicas, id)
+		if !slices.Contains(pi.Replicas, id) {
+			pi.Replicas = append(pi.Replicas, id)
+		}
 
 		return false // a follower
 	}
