@@ -181,7 +181,14 @@ func (c *Controller) HandleDeadBroker(brokerID string) (string, string, error) {
 	}
 
 	return bc, pID, nil
+			if r != bID && c.isBrokerAlive(r) {
+				bcID = r
+				break
+			}
 
+func (c *Controller) isBrokerAlive(bID string) bool {
+	_, exists := c.Brokers[bID]
+	return exists
 }
 
 func (c *Controller) UpdateLeader(bcID, pID string) {
