@@ -2,12 +2,14 @@ package broker
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/kkchu791/sounds/internal/domain/model"
+	"github.com/kkchu791/sounds/internal/domain/service"
 )
 
 type Server struct {
@@ -109,6 +111,44 @@ func (s *Server) AppendHandler(w http.ResponseWriter, req *http.Request) {
 
 		w.WriteHeader(http.StatusCreated)
 		io.WriteString(w, "message appended successfully")
+	} else {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+type PromoteRequest struct {
+	PartitionID string   `json:"partition_id"`
+	ISR         []string `json:"isr"`
+}
+type PromoteResponse struct {
+	Status string `json:"status"`
+}
+
+func (s *Server) PromoteHandler(w http.ResponseWriter, req *http.Request) {
+	if req.Method == http.MethodPost {
+		var pr PromoteRequest
+		err := json.NewDecoder(req.Body).Decode(&pr)
+		if err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+
+		// Broker Serve promote
+		service := service.NewBrokerService(s.broker)
+		service.Promote(pr.ISR)
+
+		fmt.Println(s.broker)
+
+		//write status ok
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		pres := PromoteResponse{
+			Status: "ok",
+		}
+		json.NewEncoder(w).Encode(&pres)
+
 	} else {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return

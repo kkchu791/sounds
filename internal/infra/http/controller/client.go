@@ -24,25 +24,27 @@ func NewClient(baseURL string) *Client {
 }
 
 type PromoteReq struct {
-	PartitionID string
-	ISR         []string
+	PartitionID string   `json:"partition_id"`
+	ISR         []string `json:"isr"`
 }
 
 type PromoteResp struct {
-	Status string
+	Status string `json:"status"`
 }
 
 func (c *Client) doRequest(method, path string, body any) ([]byte, error) {
 	var buf bytes.Buffer //creates a Buffer object that grows automatically, implements io.Writer
 	json.NewEncoder(&buf).Encode(&body)
 
-	req, err := http.NewRequest(method, c.baseURL+path, &buf)
+	req, err := http.NewRequest(method, "http://"+c.baseURL+path, &buf)
+
 	if err != nil {
 		log.Printf("failed to create request: %s", err)
 		return nil, err
 	}
 
 	resp, err := c.httpClient.Do(req)
+
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +52,7 @@ func (c *Client) doRequest(method, path string, body any) ([]byte, error) {
 	defer resp.Body.Close()
 
 	dataByteSlice, err := io.ReadAll(resp.Body)
+
 	if err != nil {
 		return nil, err
 	}

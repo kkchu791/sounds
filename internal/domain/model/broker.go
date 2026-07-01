@@ -1,6 +1,8 @@
 package model
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"math"
 	"sync"
@@ -62,4 +64,28 @@ func (b *Broker) Append(m *Message) {
 
 func (b *Broker) Read(offset int) (*Message, error) {
 	return b.Partition.Read(offset)
+}
+
+func (b *Broker) Promote() error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if b.IsLeader {
+		err := errors.New("Broker is already a leader")
+		return err
+	}
+
+	b.IsLeader = true
+	fmt.Printf("Broker %s promoted to leader", b.ID)
+	return nil
+}
+
+func (b *Broker) UpdateISR(isr []string) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.ISR = isr
+	fmt.Printf("ISR Updated with: %v", isr)
+
+	return nil
 }

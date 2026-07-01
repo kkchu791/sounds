@@ -44,5 +44,6 @@ func Run() {
 	http.HandleFunc("/replicate", server.ReplicateHandler)
 	http.HandleFunc("/append", server.AppendHandler)
 	http.HandleFunc("/read", server.ReadHandler)
+	http.HandleFunc("/promote", server.PromoteHandler)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
