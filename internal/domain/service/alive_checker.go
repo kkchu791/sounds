@@ -27,18 +27,26 @@ func (ac *AliveChecker) Start() {
 				continue
 			}
 
-			bcAddr := ac.Controller.Brokers[bcID].BrokerAddr
-			isr := ac.Controller.Partitions[pID].ISR
-			c := controller.NewClient(bcAddr)
-			pr, err := c.Promote(pID, isr)
+			if bcID != "" {
+				bcAddr := ac.Controller.Brokers[bcID].BrokerAddr
+				isr := ac.Controller.Partitions[pID].ISR
+				c := controller.NewClient(bcAddr)
+				pr, err := c.Promote(pID, isr)
 
-			fmt.Print(pr)
-			// Cmodel. Update Leader in State if Success
-			if pr.Status == "ok" {
-				ac.Controller.UpdateLeader(bcID, pID)
-			} else {
-				fmt.Printf("failed to promote leader: %s", bcID)
+				if err != nil {
+					fmt.Printf("promoting error:", err)
+				}
+
+				if pr.Status == "ok" {
+					ac.Controller.UpdateLeader(bcID, pID)
+				} else {
+					fmt.Printf("failed to promote leader: %s", bcID)
+				}
 			}
+
+			fmt.Println("just verifying")
+			fmt.Println(ac.Controller.Brokers)
+			fmt.Println(ac.Controller.Partitions[pID])
 		}
 	}
 }
