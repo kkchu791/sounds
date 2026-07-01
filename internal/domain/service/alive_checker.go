@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/kkchu791/sounds/internal/domain/model"
@@ -14,39 +13,39 @@ type AliveChecker struct {
 	Timeout    time.Duration
 }
 
-func (ac *AliveChecker) Start() {
-	c := time.Tick(1 * time.Second)
+func (ac *AliveChecker) Start() { // it runs alive checker
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
 
-	for range c {
-		deadBrokers := ac.Controller.GetDeadBrokers(ac.Timeout)
-		for _, brokerID := range deadBrokers {
+	for range ticker.C {
+		ac.HandleDeadBrokers()
+	}
+}
 
-			bcID, pID, err := ac.Controller.HandleDeadBroker(brokerID)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
+func (ac *AliveChecker) HandleDeadBrokers() {
+	list := ac.Controller.GetDeadBrokers(ac.Timeout)
 
-			if bcID != "" {
-				bcAddr := ac.Controller.Brokers[bcID].BrokerAddr
-				isr := ac.Controller.Partitions[pID].ISR
-				c := controller.NewClient(bcAddr)
-				pr, err := c.Promote(pID, isr)
+	for _, dead := range list {
+		bcID, bcAddr, pID, isr := ac.Controller.HandleDeadBroker(dead)
 
-				if err != nil {
-					fmt.Printf("promoting error:", err)
-				}
-
-				if pr.Status == "ok" {
-					ac.Controller.UpdateLeader(bcID, pID)
-				} else {
-					fmt.Printf("failed to promote leader: %s", bcID)
-				}
-			}
-
-			fmt.Println("just verifying")
-			fmt.Println(ac.Controller.Brokers)
-			fmt.Println(ac.Controller.Partitions[pID])
+		if bcID != "" {
+			ac.Promote(bcID, bcAddr, pID, isr)
 		}
+	}
+}
+
+func (ac *AliveChecker) Promote(bcID, bcAddr, pID string, isr []string) {
+	c := controller.NewClient(bcAddr)
+	pr, err := c.Promote(pID, isr)
+
+	if err != nil {
+		fmt.Printf("promoting error: %v", err)
+		return
+	}
+
+	if pr.Status == "ok" {
+		ac.Controller.UpdateLeader(bcID, pID)
+	} else {
+		fmt.Printf("failed to promote leader: %s", bcID)
 	}
 }

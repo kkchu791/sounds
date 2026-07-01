@@ -134,42 +134,29 @@ func (c *Controller) GetDeadBrokers(timeout time.Duration) []string {
 		}
 	}
 
-	fmt.Printf("how many dead brokers: %v \n", deadBrokers)
+	fmt.Printf("dead brokers: %v \n", deadBrokers)
 
 	return deadBrokers
 }
 
-func (c *Controller) HandleDeadBroker(brokerID string) (string, string, error) {
+func (c *Controller) HandleDeadBroker(brokerID string) (string, string, string, []string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	err := c.removeBroker(brokerID)
-	if err != nil {
-		return "", "", err
-	}
+	c.removeBroker(brokerID)
 
-	var bc string
+	// TODO: only handles single partition for now, need to refactor if more partitions are added
+	var bcID string
 	var pID string
+	var isr []string
+	var bcAddr string
 	for id, p := range c.Partitions {
-		if idx := slices.Index(p.ISR, brokerID); idx != -1 {
-			p.ISR = slices.Delete(p.ISR, idx, idx+1)
-		}
+		c.removeBrokerFromISRAndReplica(p, brokerID)
 
 		if brokerID == p.LeaderID {
-			if len(p.ISR) > 0 {
-				bc = p.ISR[0]
-			} else if len(p.Replicas) > 0 {
-				for _, r := range p.Replicas {
-					if r != brokerID {
-						bc = r
-						break
-					}
-				}
-			} else {
-				bc = NO_LEADER
-			}
+			bcID = c.selectBestCandidate(p, brokerID)
 
-			fmt.Printf("Potential Leader for partition %s changed from %s to %s\n", id, brokerID, bc)
+			fmt.Printf("Potential Leader for partition %s changed from %s to %s \n", id, brokerID, bcID)
 			fmt.Printf("Current ISR for partition %s: %v \n", id, p.ISR)
 			fmt.Printf("Current Replicas for partition %s: %v \n", id, p.Replicas)
 		} else {
@@ -177,14 +164,46 @@ func (c *Controller) HandleDeadBroker(brokerID string) (string, string, error) {
 		}
 
 		pID = id
-
+		isr = p.ISR
 	}
 
-	return bc, pID, nil
+	if bcID != "" {
+		bcAddr = c.Brokers[bcID].BrokerAddr
+	}
+
+	return bcID, bcAddr, pID, isr
+
+}
+
+func (c *Controller) removeBrokerFromISRAndReplica(p *PartitionInfo, bID string) {
+	if idx := slices.Index(p.ISR, bID); idx != -1 {
+		p.ISR = slices.Delete(p.ISR, idx, idx+1)
+	}
+
+	// if idx := slices.Index(p.Replicas, bID); idx != -1 {
+	// 	p.Replicas = slices.Delete(p.Replicas, idx, idx+1)
+	// }
+}
+
+func (c *Controller) selectBestCandidate(p *PartitionInfo, bID string) string {
+	var bcID string
+	if len(p.ISR) > 0 {
+		bcID = p.ISR[0]
+	} else if len(p.Replicas) > 0 {
+		for _, r := range p.Replicas {
 			if r != bID && c.isBrokerAlive(r) {
 				bcID = r
 				break
 			}
+		}
+	}
+
+	if bcID == "" {
+		fmt.Println("found no eligible leaders to promote")
+	}
+
+	return bcID
+}
 
 func (c *Controller) isBrokerAlive(bID string) bool {
 	_, exists := c.Brokers[bID]
