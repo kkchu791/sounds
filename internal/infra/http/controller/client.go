@@ -1,82 +1,15 @@
 package controller
 
 import (
-	"bytes"
-	"encoding/json"
-	"io"
-	"log"
-	"net/http"
-	"time"
+	"github.com/kkchu791/sounds/internal/infra/http/restclient"
 )
 
 type Client struct {
-	baseURL    string
-	httpClient *http.Client
+	rc *restclient.RestClient
 }
 
 func NewClient(baseURL string) *Client {
 	return &Client{
-		baseURL: baseURL,
-		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
-		},
+		rc: restclient.NewRestClient(baseURL),
 	}
-}
-
-type PromoteReq struct {
-	PartitionID string   `json:"partition_id"`
-	ISR         []string `json:"isr"`
-}
-
-type PromoteResp struct {
-	Status string `json:"status"`
-}
-
-func (c *Client) doRequest(method, path string, body any) ([]byte, error) {
-	var buf bytes.Buffer //creates a Buffer object that grows automatically, implements io.Writer
-	json.NewEncoder(&buf).Encode(&body)
-
-	req, err := http.NewRequest(method, "http://"+c.baseURL+path, &buf)
-
-	if err != nil {
-		log.Printf("failed to create request: %s", err)
-		return nil, err
-	}
-
-	resp, err := c.httpClient.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	dataByteSlice, err := io.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return dataByteSlice, nil
-}
-
-func (c *Client) Promote(pID string, isr []string) (*PromoteResp, error) {
-	payload := PromoteReq{
-		PartitionID: pID,
-		ISR:         isr,
-	}
-
-	dataByteSlice, err := c.doRequest("POST", "/promote", payload)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var pr PromoteResp
-	err = json.Unmarshal(dataByteSlice, &pr)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pr, err
 }
