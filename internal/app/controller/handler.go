@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/kkchu791/sounds/internal/domain/model"
@@ -41,8 +40,6 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-
-	fmt.Println(req.BrokerID, req.BrokerAddr, partitionID)
 
 	result, err := s.Controller.RegisterBroker(req.BrokerID, req.BrokerAddr, partitionID)
 

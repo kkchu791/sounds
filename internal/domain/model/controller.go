@@ -61,20 +61,20 @@ func (c *Controller) removeBroker(id string) error {
 	return nil
 }
 
-func (c *Controller) addPartition(id string, partitionID string) bool {
+func (c *Controller) addPartition(bID string, partitionID string) bool {
 	pi, exists := c.Partitions[partitionID]
 
 	if !exists {
 		c.Partitions[partitionID] = &PartitionInfo{
-			LeaderID: id,
-			ISR:      []string{id},
-			Replicas: []string{id},
+			LeaderID: bID,
+			ISR:      []string{bID},
+			Replicas: []string{bID},
 		}
 
 		return true // a leader
 	} else {
-		if !slices.Contains(pi.Replicas, id) {
-			pi.Replicas = append(pi.Replicas, id)
+		if !slices.Contains(pi.Replicas, bID) {
+			pi.Replicas = append(pi.Replicas, bID)
 		}
 
 		return false // a follower
