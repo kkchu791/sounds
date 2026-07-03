@@ -1,11 +1,13 @@
 package broker
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/kkchu791/sounds/internal/domain/model"
+	"github.com/kkchu791/sounds/internal/domain/service"
 )
 
 // sets up the server
@@ -32,14 +34,15 @@ func Run() {
 	)
 
 	// this is for followers to constantly ping the leaders for replication
-	if !server.broker.IsLeader {
-		r := &Replicator{server: server, currOffset: 0}
-		go r.Start()
-	}
+	// if !server.broker.IsLeader {
+	// 	r := &Replicator{server: server, currOffset: 0}
+	// 	go r.Start()
+	// }
 
 	// this is for pinging the controller to let it know this broker is alive
-	hb := &HeartbeatClient{ID: id, ControllerAddr: controllerAddr}
-	go hb.Start()
+	ctx := context.Background()
+	hb := service.SendHeartbeat{ID: id, ControllerAddr: controllerAddr}
+	go hb.Start(ctx)
 
 	http.HandleFunc("/replicate", server.ReplicateHandler)
 	http.HandleFunc("/append", server.AppendHandler)
