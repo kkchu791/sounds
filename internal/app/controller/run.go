@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
@@ -13,11 +14,13 @@ func Run() {
 	mux := http.NewServeMux()
 
 	// this is a worker for checking if any broker nodes are dead and handle leader election
+	ctx := context.Background()
+
 	ac := &service.AliveChecker{
 		Controller: server.Controller,
 		Timeout:    time.Duration(timeout) * time.Second,
 	}
-	go ac.Start()
+	go ac.Start(ctx)
 
 	mux.HandleFunc("/register", server.RegisterHandler)
 	mux.HandleFunc("/heartbeat", server.HeartbeatHandler)

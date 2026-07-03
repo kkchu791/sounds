@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,30 +14,31 @@ type AliveChecker struct {
 	Timeout    time.Duration
 }
 
-func (ac *AliveChecker) Start() { // it runs alive checker
+func (ac *AliveChecker) Start(ctx context.Context) { // it runs alive checker
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		ac.HandleDeadBrokers()
+		ac.HandleDeadBrokers(ctx)
 	}
 }
 
-func (ac *AliveChecker) HandleDeadBrokers() {
+func (ac *AliveChecker) HandleDeadBrokers(ctx context.Context) {
 	list := ac.Controller.GetDeadBrokers(ac.Timeout)
 
 	for _, dead := range list {
 		bcID, bcAddr, pID, isr := ac.Controller.HandleDeadBroker(dead)
 
 		if bcID != "" {
-			ac.Promote(bcID, bcAddr, pID, isr)
+			ac.Promote(ctx, bcID, bcAddr, pID, isr)
 		}
 	}
 }
 
-func (ac *AliveChecker) Promote(bcID, bcAddr, pID string, isr []string) {
-	c := controller.NewClient(bcAddr)
-	pr, err := c.Promote(pID, isr)
+func (ac *AliveChecker) Promote(ctx context.Context, bcID, bcAddr, pID string, isr []string) {
+	baseURL := "http://" + bcAddr
+	c := controller.NewClient(baseURL)
+	pr, err := c.Promote(ctx, pID, isr)
 
 	if err != nil {
 		fmt.Printf("promoting error: %v", err)
