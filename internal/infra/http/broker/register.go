@@ -10,10 +10,10 @@ type RegisterRequest struct {
 	BrokerAddr string `json:"broker_addr"`
 }
 
-func (c *Client) Register(ctx context.Context, brokerID, brokerAddr string) error {
+func (c *Client) Register(ctx context.Context, bID, bAddr string) error {
 	payload := RegisterRequest{
-		BrokerID:   brokerID,
-		BrokerAddr: brokerAddr,
+		BrokerID:   bID,
+		BrokerAddr: bAddr,
 	}
 
 	_, err := c.rc.Do(ctx, "POST", "/register", payload)
