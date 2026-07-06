@@ -12,10 +12,6 @@ type SendHeartbeat struct {
 	ControllerAddr string
 }
 
-type HeartbeatReq struct {
-	BrokerID string `json:"broker_id"`
-}
-
 func (sh *SendHeartbeat) Start(ctx context.Context) {
 	ticker := time.NewTicker(3 * time.Second)
 	for range ticker.C {
