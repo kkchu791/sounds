@@ -10,7 +10,6 @@ type HeartbeatReq struct {
 }
 
 func (s *Server) HeartbeatHandler(w http.ResponseWriter, r *http.Request) {
-	// check http method
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
