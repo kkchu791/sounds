@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/kkchu791/sounds/internal/domain/model"
 	"github.com/kkchu791/sounds/internal/domain/service"
 )
 
@@ -25,12 +26,12 @@ func Run() {
 		log.Fatalf("failed to register with controller: %s", err)
 	}
 
-	// server := NewServer(
-	// 	bId,
-	// 	model.NewPartition(),
-	// 	resp.IsLeader,
-	// 	resp.LeaderAddr,
-	// )
+	server := NewServer(
+		bID,
+		model.NewPartition(),
+		false,
+		"",
+	)
 
 	// this is for followers to constantly ping the leaders for replication
 	// if !server.broker.IsLeader {
