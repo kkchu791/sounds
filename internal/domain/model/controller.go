@@ -87,6 +87,8 @@ func (c *Controller) RegisterBroker(i string, a string, p string) (*RegisterResu
 	// Add Broker
 	c.addBroker(i, a)
 
+	// this usually occurs when adminclient creates a topic.
+	// kafka-topics.sh --create --topic sounds --partitions 3
 	//Add to Partition
 	isLeader := c.addPartition(i, p)
 
@@ -109,7 +111,6 @@ func (c *Controller) RegisterBroker(i string, a string, p string) (*RegisterResu
 func (c *Controller) UpdateLastSeen(id string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	// business logic of updating the state of broker
 
 	_, exists := c.Brokers[id]
 
