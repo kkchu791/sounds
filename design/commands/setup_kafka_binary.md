@@ -8,7 +8,20 @@ CONTROLLER_2_UUID="$(bin/kafka-storage.sh random-uuid)"
 CONTROLLER_2_UUID="$(bin/kafka-storage.sh random-uuid)"
 ```
 
-##### formaat each brokers storage
+##### server.property edits
+
+create 3 seperate server.properties files and change these fields:
+
+```
+node.id={broker #}
+controller.quorum.bootstrap.servers=localhost:{9093},localhost:{9095},localhost:{9097}
+listeners=PLAINTEXT://:{9092},CONTROLLER://:{9093}
+advertised.listeners=PLAINTEXT://localhost:{9092},CONTROLLER://localhost:{9093} //change ports
+log.dirs=/tmp/kraft-logs-{broker #} // where to store the log files
+```
+
+
+##### format each brokers storage
 {change server-{num} for each server}
 
 ```bin/kafka-storage.sh format --cluster-id $KAFKA_CLUSTER_ID --initial-controllers "1@localhost:9093:${CONTROLLER_1_UUID},2@localhost:9095:${CONTROLLER_2_UUID},3@localhost:9097:${CONTROLLER_3_UUID}" -c config/server-1.properties```
