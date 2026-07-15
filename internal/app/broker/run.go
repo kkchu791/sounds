@@ -26,11 +26,12 @@ func Run() {
 		log.Fatalf("failed to register with controller: %s", err)
 	}
 
+	const isLeader = false
+	const leaderAddr = ""
+	broker := model.NewBroker(bID, model.NewPartition(), isLeader)
 	server := NewServer(
-		bID,
-		model.NewPartition(),
-		false,
-		"",
+		broker,
+		leaderAddr,
 	)
 
 	// this is for followers to constantly ping the leaders for replication

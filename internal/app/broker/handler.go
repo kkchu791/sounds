@@ -17,9 +17,9 @@ type Server struct {
 	leaderAddr string
 }
 
-func NewServer(id string, p *model.Partition, isLeader bool, leaderAddr string) *Server {
+func NewServer(broker *model.Broker, leaderAddr string) *Server {
 	return &Server{
-		broker:     model.NewBroker(id, p, isLeader),
+		broker:     broker,
 		leaderAddr: leaderAddr,
 	}
 }
