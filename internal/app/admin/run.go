@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -31,8 +32,13 @@ func Run(flags []string) error {
 	pc := os.Args[6]
 	rf := os.Args[8]
 	bAddr := strings.Split(servers, ",")[0]
+	ctx := context.Background() //TODO: Wrap with Timeout
 
-	r := service.CreatTopic(tn, pc, rf, bAddr)
+	r, err := service.CreatTopic(ctx, tn, pc, rf, bAddr)
+
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	// r should equal
 	// CreateTopicsResponse{

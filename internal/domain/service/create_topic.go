@@ -1,9 +1,10 @@
 package service
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/kkchu791/sounds/internal/infra/http/controller"
+	"github.com/kkchu791/sounds/internal/infra/http/admin"
 )
 
 type CreateTopicsResponse struct {
@@ -21,29 +22,29 @@ type CreateTopicResult struct {
 	ErrorMsg  string
 }
 
-func CreatTopic(tn, pc, rf, bAddr string) (CreateTopicsResponse, error) {
+func CreatTopic(ctx context.Context, tn, pc, rf, bAddr string) (CreateTopicsResponse, error) {
 	fmt.Println("in the service, Hey")
 
 	//creates a client for broker
 	aClient := admin.NewClient(bAddr)
-	resp, err := aClient.GetMetaData()
-
+	resp, err := aClient.Metadata(ctx)
+	fmt.Println(resp)
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return CreateTopicsResponse{}, err
 	}
 
 	//resp should equal MetaDataRes{controller_addr: "localhost:5000"}
 
-	cAddr := resp.controller_addr
-	cClient := controller.NewClient(cAddr)
+	// cAddr := resp.controller_addr
+	// cClient := controller.NewClient(cAddr)
 
-	resp, err = cClient.CreateTopic()
+	// resp, err = cClient.CreateTopic(ctx)
 
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return CreateTopicsResponse{}, err
+	// }
 	// resp should equal
 	// CreateTopicsResponse{
 	//Topics: CreateTopicResult {
@@ -53,5 +54,5 @@ func CreatTopic(tn, pc, rf, bAddr string) (CreateTopicsResponse, error) {
 	//}
 	//}
 
-	return resp
+	return CreateTopicsResponse{}, err
 }
