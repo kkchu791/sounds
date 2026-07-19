@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/kkchu791/sounds/internal/domain/model"
 	"github.com/kkchu791/sounds/internal/domain/service"
@@ -29,9 +30,11 @@ func Run() {
 	const isLeader = false
 	const leaderAddr = ""
 	broker := model.NewBroker(bID, model.NewPartition(), isLeader)
+	mux := http.NewServeMux()
 	server := NewServer(
 		broker,
 		leaderAddr,
+		mux,
 	)
 
 	// this is for followers to constantly ping the leaders for replication
@@ -44,9 +47,14 @@ func Run() {
 	hb := service.SendHeartbeat{ID: bID, ControllerAddr: controllerAddr}
 	go hb.Start(ctx)
 
-	http.HandleFunc("/replicate", server.ReplicateHandler)
-	http.HandleFunc("/append", server.AppendHandler)
-	http.HandleFunc("/read", server.ReadHandler)
-	http.HandleFunc("/promote", server.PromoteHandler)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	httpServer := &http.Server{
+		Addr:         ":" + port,
+		Handler:      mux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  30 * time.Second,
+	}
+
+	server.routes()
+	log.Fatal(httpServer.ListenAndServe())
 }

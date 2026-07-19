@@ -2,10 +2,8 @@ Run the controller with:
 Terminal 1:
 `go run ./cmd/controller`
 
-
 Run the leader with:
 Terminal 2 (leader):
-
 ` BROKER_ID=broker-0 BROKER_ADDR=localhost:9001 BROKER_PORT=9001 CONTROLLER_ADDR=localhost:9000 go run ./cmd/broker`
 
 Run the follower with:

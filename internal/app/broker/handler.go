@@ -15,12 +15,14 @@ import (
 type Server struct {
 	broker     *model.Broker
 	leaderAddr string
+	mux        *http.ServeMux
 }
 
-func NewServer(broker *model.Broker, leaderAddr string) *Server {
+func NewServer(b *model.Broker, lAddr string, m *http.ServeMux) *Server {
 	return &Server{
-		broker:     broker,
-		leaderAddr: leaderAddr,
+		broker:     b,
+		leaderAddr: lAddr,
+		mux:        m,
 	}
 }
 
