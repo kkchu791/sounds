@@ -22,7 +22,17 @@ type CreateTopicResult struct {
 	ErrorMsg  string
 }
 
-func CreatTopic(ctx context.Context, tn, pc, rf, bAddr string) (CreateTopicsResponse, error) {
+type TopicList struct {
+	Topics []Topic
+}
+
+type Topic struct {
+	Name              string
+	PartitionCount    int
+	ReplicationFactor int
+}
+
+func CreatTopics(ctx context.Context, bAddr string, topic ...Topic) (CreateTopicsResponse, error) {
 	fmt.Println("in the service, Hey")
 
 	//creates a client for broker
@@ -39,7 +49,13 @@ func CreatTopic(ctx context.Context, tn, pc, rf, bAddr string) (CreateTopicsResp
 	// cAddr := resp.controller_addr
 	// cClient := controller.NewClient(cAddr)
 
-	// resp, err = cClient.CreateTopic(ctx)
+	// passed in a list of topics
+
+	tl := TopicList{
+		[]Topic{topic[0]},
+	}
+
+	// resp, err = cClient.CreateTopics(ctx, tl)
 
 	// if err != nil {
 	// 	fmt.Println(err)

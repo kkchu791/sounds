@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/kkchu791/sounds/internal/domain/service"
@@ -26,15 +27,20 @@ type CreateTopicResult struct {
 
 func Run(flags []string) error {
 	servers := os.Getenv("BOOTSTRAP_SERVERS") // "localhost:5001", "localhost:5002"
-	fmt.Println("hey watsup")
 	fmt.Println(os.Args[5])
 	tn := os.Args[4]
-	pc := os.Args[6]
-	rf := os.Args[8]
+	pc, _ := strconv.Atoi(os.Args[6])
+	rf, _ := strconv.Atoi(os.Args[8])
 	bAddr := strings.Split(servers, ",")[0]
 	ctx := context.Background() //TODO: Wrap with Timeout
 
-	r, err := service.CreatTopic(ctx, tn, pc, rf, bAddr)
+	topic := service.Topic{
+		Name:              tn,
+		PartitionCount:    pc,
+		ReplicationFactor: rf,
+	}
+
+	r, err := service.CreatTopics(ctx, bAddr, topic)
 
 	if err != nil {
 		fmt.Println(err)
