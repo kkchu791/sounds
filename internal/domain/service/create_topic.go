@@ -33,14 +33,11 @@ type Topic struct {
 type MetadataResponse struct {
 	CAddr int `json:"controller_id"`
 }
-
 type AdminClient interface {
 	Metadata(ctx context.Context) (MetadataResponse, error)
 }
 
 func CreatTopics(ctx context.Context, ac AdminClient, bAddr string, topic ...Topic) (CreateTopicsResponse, error) {
-	fmt.Println("in the service, Hey")
-
 	//creates a client for broker
 	resp, err := ac.Metadata(ctx)
 	fmt.Println(resp)

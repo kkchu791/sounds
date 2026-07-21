@@ -35,7 +35,7 @@ func Run(flags []string) error {
 	bAddr := strings.Split(servers, ",")[0]
 	ctx := context.Background() //TODO: Wrap with Timeout
 
-	c := admin.NewClient(bAddr) // concrete infra client
+	c := admin.NewClient(bAddr)
 
 	topic := service.Topic{
 		Name:              tn,

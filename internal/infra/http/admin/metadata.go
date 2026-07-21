@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"github.com/kkchu791/sounds/internal/domain/service"
 )
 
 // type MetadataReq struct {
@@ -14,20 +16,16 @@ import (
 // 	Name string
 // }
 
-type MetadataResponse struct {
-	CAddr int `json:"controller_id"`
-}
-
-func (c *Client) Metadata(ctx context.Context) (MetadataResponse, error) {
+func (c *Client) Metadata(ctx context.Context) (service.MetadataResponse, error) {
 	// payload := MetadataReq{
 	// }
 
 	dataByteSlice, err := c.rc.Do(ctx, "GET", "/metadata", nil)
 
-	var mr MetadataResponse
+	var mr service.MetadataResponse
 	err = json.Unmarshal(dataByteSlice, &mr)
 	if err != nil {
-		return MetadataResponse{}, fmt.Errorf("unmarshal metadata response: %w", err)
+		return service.MetadataResponse{}, fmt.Errorf("unmarshal metadata response: %w", err)
 	}
 
 	return mr, nil
