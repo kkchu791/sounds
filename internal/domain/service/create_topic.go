@@ -3,8 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-
-	"github.com/kkchu791/sounds/internal/infra/http/admin"
 )
 
 type CreateTopicsResponse struct {
@@ -32,12 +30,19 @@ type Topic struct {
 	ReplicationFactor int
 }
 
-func CreatTopics(ctx context.Context, bAddr string, topic ...Topic) (CreateTopicsResponse, error) {
+type MetadataResponse struct {
+	CAddr int `json:"controller_id"`
+}
+
+type AdminClient interface {
+	Metadata(ctx context.Context) (MetadataResponse, error)
+}
+
+func CreatTopics(ctx context.Context, ac AdminClient, bAddr string, topic ...Topic) (CreateTopicsResponse, error) {
 	fmt.Println("in the service, Hey")
 
 	//creates a client for broker
-	aClient := admin.NewClient(bAddr)
-	resp, err := aClient.Metadata(ctx)
+	resp, err := ac.Metadata(ctx)
 	fmt.Println(resp)
 	if err != nil {
 		fmt.Println(err)

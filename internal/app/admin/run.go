@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/kkchu791/sounds/internal/domain/service"
+	"github.com/kkchu791/sounds/internal/infra/http/admin"
 )
 
 type CreateTopicsResponse struct {
@@ -34,13 +35,15 @@ func Run(flags []string) error {
 	bAddr := strings.Split(servers, ",")[0]
 	ctx := context.Background() //TODO: Wrap with Timeout
 
+	c := admin.NewClient(bAddr) // concrete infra client
+
 	topic := service.Topic{
 		Name:              tn,
 		PartitionCount:    pc,
 		ReplicationFactor: rf,
 	}
 
-	r, err := service.CreatTopics(ctx, bAddr, topic)
+	r, err := service.CreatTopics(ctx, c, bAddr, topic)
 
 	if err != nil {
 		fmt.Println(err)
