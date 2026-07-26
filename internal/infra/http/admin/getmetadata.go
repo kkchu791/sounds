@@ -16,7 +16,7 @@ import (
 // 	Name string
 // }
 
-func (c *Client) Metadata(ctx context.Context) (service.MetadataResponse, error) {
+func (c *Client) GetMetadata(ctx context.Context) (*service.MetadataResponse, error) {
 	// payload := MetadataReq{
 	// }
 
@@ -25,8 +25,8 @@ func (c *Client) Metadata(ctx context.Context) (service.MetadataResponse, error)
 	var mr service.MetadataResponse
 	err = json.Unmarshal(dataByteSlice, &mr)
 	if err != nil {
-		return service.MetadataResponse{}, fmt.Errorf("unmarshal metadata response: %w", err)
+		return &service.MetadataResponse{}, fmt.Errorf("unmarshal metadata response: %w", err)
 	}
 
-	return mr, nil
+	return &mr, nil
 }
