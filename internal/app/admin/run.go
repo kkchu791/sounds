@@ -7,24 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kkchu791/sounds/internal/domain/service"
 	"github.com/kkchu791/sounds/internal/infra/http/admin"
 )
-
-type CreateTopicsResponse struct {
-	Topics []CreateTopicResult
-}
-
-const (
-	ErrNone                     = 0
-	ErrInvalidReplicationFactor = 38
-)
-
-type CreateTopicResult struct {
-	Name      string
-	ErrorCode int
-	ErrorMsg  string
-}
 
 func Run(flags []string) error {
 	servers := os.Getenv("BOOTSTRAP_SERVERS") // "localhost:5001", "localhost:5002"
@@ -35,36 +19,29 @@ func Run(flags []string) error {
 	bAddr := strings.Split(servers, ",")[0]
 	ctx := context.Background() //TODO: Wrap with Timeout
 
-	c := admin.NewClient(bAddr)
+	ac := admin.NewClient(bAddr)
 
-	topic := service.Topic{
-		Name:              tn,
-		PartitionCount:    pc,
-		ReplicationFactor: rf,
-	}
-
-	r, err := service.CreatTopics(ctx, c, bAddr, topic)
+	resp, err := ac.GetMetadata(ctx)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	// r should equal
-	// CreateTopicsResponse{
-	//Topics: CreateTopicResult {
-	// Name: "Sounds"
-	// ErrorCode: ErrNone
-	// ErrorMsg: ""
-	//}
-	//}
+	topic := admin.Topic{
+		Name:              tn,
+		PartitionCount:    pc,
+		ReplicationFactor: rf,
+	}
 
-	fmt.Println(r)
+	tl := []admin.Topic{topic}
+
+	cc := admin.NewClient(resp.CAddr)
+	resp, err = cc.CreateTopics(ctx, tl)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(resp)
 	return nil
-
-	// you have all the env variables now
-	// all you have to do is call a service, like create topic
-	// service.createtopic
-
-	// then exit this bad boy or print the results of the service
-
 }
