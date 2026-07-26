@@ -13,9 +13,9 @@ func Run() {
 	server := NewServer()
 	mux := http.NewServeMux()
 
-	// this is a worker for checking if any broker nodes are dead and handle leader election
 	ctx := context.Background()
 
+	// this is a worker for checking if any broker nodes are dead and handle leader election
 	ac := &service.AliveChecker{
 		Controller: server.Controller,
 		Timeout:    time.Duration(timeout) * time.Second,
