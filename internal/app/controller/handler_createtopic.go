@@ -49,7 +49,8 @@ func (s *Server) CreateTopicHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	//just dummy day for now
+
+	//just dummy data for now
 	result := Result{Name: "Sounds", ErrorCode: 0}
 
 	results := []Result{result}

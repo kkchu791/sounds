@@ -12,20 +12,27 @@ const NO_LEADER = ""
 
 type Controller struct {
 	Brokers    map[string]*BrokerInfo
+	Topics     map[string]*TopicInfo
 	Partitions map[string]*PartitionInfo
 	mu         sync.Mutex
-}
-
-type PartitionInfo struct {
-	LeaderID string
-	ISR      []string
-	Replicas []string
 }
 
 type BrokerInfo struct {
 	BrokerID   string
 	BrokerAddr string
 	LastSeen   time.Time
+}
+
+type TopicInfo struct {
+	Name              string
+	PartitionCount    int
+	ReplicationFactor int
+}
+
+type PartitionInfo struct {
+	LeaderID string
+	ISR      []string
+	Replicas []string
 }
 
 type RegisterResult struct {
