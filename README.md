@@ -20,7 +20,7 @@ Terminal 3 (follower):
 After brokers are up run admin client:
 Terminal 4 (admin client):
 
-`export BOOTSTRAP_SERVERS="localhost:9001,localhost:9002"`
+`export BOOTSTRAP_SERVERS="http://localhost:9001,http://localhost:9002"`
 
 `go run ./cmd/admin -- create-topic --topic Sounds --partitions 6 --replication-factor 3`
 
