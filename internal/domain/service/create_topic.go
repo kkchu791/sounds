@@ -57,6 +57,8 @@ func CreatTopics(ctx context.Context, ac AdminClient, bAddr string, topic ...Top
 		[]Topic{topic[0]},
 	}
 
+	fmt.Println(tl)
+
 	// resp, err = cClient.CreateTopics(ctx, tl)
 
 	// if err != nil {
