@@ -31,6 +31,7 @@ type Result struct {
 }
 
 func (s *Server) CreateTopicHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("hey you hit the controller create topic handler")
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -44,30 +45,19 @@ func (s *Server) CreateTopicHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: add logic here
-	// takes in a topic configurations like topic name partition count, replication factor
-	//result, err := s.Controller.CreateTopic()
-	// Topics []Topic
-
 	for _, topic := range req.Topics {
-
-		// validate if rf is smaller than servers
-
 		if topic.ReplicationFactor > len(s.Controller.Brokers) {
 			fmt.Println("rf too large, need to add brokers or decrease rf")
 		}
 
-		s.Controller.UpdateTopicPartition(model.Topic{
+		mt := model.Topic{
 			Name:              topic.Name,
 			PartitionCount:    topic.PartitionCount,
 			ReplicationFactor: topic.ReplicationFactor,
-		})
+		}
 
-	}
+		s.Controller.UpdateTopicPartition(mt)
 
-	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
 	}
 
 	//just dummy data for now

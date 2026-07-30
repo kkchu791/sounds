@@ -54,6 +54,7 @@ type RegisterResult struct {
 func NewController() *Controller {
 	return &Controller{
 		Brokers:    make(map[string]*BrokerInfo),
+		Topics:     make(map[string]*TopicInfo),
 		Partitions: make(map[string]*PartitionInfo),
 	}
 }
