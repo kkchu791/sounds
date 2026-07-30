@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kkchu791/sounds/internal/app/controller"
+	"github.com/kkchu791/sounds/internal/domain/model"
 )
 
 // request structs
@@ -57,7 +57,7 @@ func (s *Server) CreateTopicHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("rf too large, need to add brokers or decrease rf")
 		}
 
-		s.Controller.UpdateTopicPartition(controller.Topic{
+		s.Controller.UpdateTopicPartition(model.Topic{
 			Name:              topic.Name,
 			PartitionCount:    topic.PartitionCount,
 			ReplicationFactor: topic.ReplicationFactor,
