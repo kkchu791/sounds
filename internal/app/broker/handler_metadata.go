@@ -17,7 +17,7 @@ func (s *Server) MetadataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ca := os.Getenv("CONTROLLER_ADDR")
+	ca := "http://" + os.Getenv("CONTROLLER_ADDR")
 
 	mr := MetadataResponse{
 		ControllerAddr: ca,
