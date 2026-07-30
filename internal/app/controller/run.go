@@ -24,6 +24,7 @@ func Run() {
 
 	mux.HandleFunc("/register", server.RegisterHandler)
 	mux.HandleFunc("/heartbeat", server.HeartbeatHandler)
+	mux.HandleFunc("/createTopic", server.CreateTopicHandler)
 
 	httpServer := &http.Server{
 		Addr:         ":9000",
