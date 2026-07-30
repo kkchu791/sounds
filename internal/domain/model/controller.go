@@ -29,6 +29,11 @@ type TopicInfo struct {
 	PartitionCount    int
 	ReplicationFactor int
 }
+type Topic struct {
+	Name              string
+	PartitionCount    int
+	ReplicationFactor int
+}
 
 type PartitionInfo struct {
 	Topic          string
@@ -234,4 +239,15 @@ func (c *Controller) UpdateLeader(bcID, pID string) {
 
 	fmt.Printf("partition %s's leader has been updated to: %s \n", pID, bcID)
 	fmt.Println("promotion completed, epoch ended")
+}
+
+func (c *Controller) UpdateTopicPartition(topic Topic) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.Topics[topic.Name] = &TopicInfo{
+		Name:              topic.Name,
+		PartitionCount:    topic.PartitionCount,
+		ReplicationFactor: topic.ReplicationFactor,
+	}
 }

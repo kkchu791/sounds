@@ -2,7 +2,10 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+
+	"github.com/kkchu791/sounds/internal/app/controller"
 )
 
 // request structs
@@ -11,9 +14,9 @@ type CreateTopicsRequest struct {
 }
 
 type Topic struct {
-	Name              string
-	PartitionCount    int
-	ReplicationFactor int
+	Name              string `json:"topic"`
+	PartitionCount    int    `json:"partition_count"`
+	ReplicationFactor int    `json:"replication_factor"`
 }
 
 // response structs
@@ -44,6 +47,23 @@ func (s *Server) CreateTopicHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: add logic here
 	// takes in a topic configurations like topic name partition count, replication factor
 	//result, err := s.Controller.CreateTopic()
+	// Topics []Topic
+
+	for _, topic := range req.Topics {
+
+		// validate if rf is smaller than servers
+
+		if topic.ReplicationFactor > len(s.Controller.Brokers) {
+			fmt.Println("rf too large, need to add brokers or decrease rf")
+		}
+
+		s.Controller.UpdateTopicPartition(controller.Topic{
+			Name:              topic.Name,
+			PartitionCount:    topic.PartitionCount,
+			ReplicationFactor: topic.ReplicationFactor,
+		})
+
+	}
 
 	if err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
