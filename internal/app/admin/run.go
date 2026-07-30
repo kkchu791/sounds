@@ -19,9 +19,9 @@ func Run(flags []string) error {
 	bAddr := strings.Split(servers, ",")[0]
 	ctx := context.Background() //TODO: Wrap with Timeout
 
-	ac := admin.NewClient(bAddr)
+	ab := admin.NewClient(bAddr)
 
-	resp, err := ac.GetMetadata(ctx)
+	resp, err := ab.GetMetadata(ctx)
 
 	if err != nil {
 		fmt.Println(err)
@@ -35,13 +35,13 @@ func Run(flags []string) error {
 
 	tl := []admin.Topic{topic}
 
-	cc := admin.NewClient(resp.CAddr)
-	resp, err = cc.CreateTopics(ctx, tl)
+	ac := admin.NewClient(resp.CAddr)
+	createResp, err := ac.CreateTopics(ctx, tl)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println(resp)
+	fmt.Println(createResp)
 	return nil
 }
