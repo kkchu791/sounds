@@ -21,6 +21,7 @@ type BrokerInfo struct {
 	BrokerID   string
 	BrokerAddr string
 	LastSeen   time.Time
+	Fenced     bool
 }
 
 type TopicInfo struct {
@@ -30,9 +31,13 @@ type TopicInfo struct {
 }
 
 type PartitionInfo struct {
-	LeaderID string
-	ISR      []string
-	Replicas []string
+	Topic          string
+	PartitionIndex int
+	LeaderID       string
+	ISR            []string
+	Replicas       []string
+	LeaderEpoch    int
+	PartitionEpoch int
 }
 
 type RegisterResult struct {
