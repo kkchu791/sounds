@@ -12,9 +12,9 @@ type CreateTopicsRequest struct {
 }
 
 type Topic struct {
-	Name              string
-	PartitionCount    int
-	ReplicationFactor int
+	Name              string `json:"topic"`
+	PartitionCount    int    `json:"partition_count"`
+	ReplicationFactor int    `json:"replication_factor"`
 }
 
 // response type structs
