@@ -9,11 +9,6 @@ type RegisterRequest struct {
 	BrokerID   string `json:"broker_id"`
 	BrokerAddr string `json:"broker_addr"`
 }
-type RegisterResponse struct {
-	IsLeader    bool   `json:"is_leader"`
-	LeaderAddr  string `json:"leader_addr"`
-	PartitionID string `json:"partition_id"`
-}
 
 func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -29,20 +24,12 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := s.Controller.RegisterBroker(req.BrokerID, req.BrokerAddr, partitionID)
+	err = s.Controller.RegisterBroker(req.BrokerID, req.BrokerAddr)
 
 	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	res := RegisterResponse{
-		IsLeader:    result.IsLeader,
-		LeaderAddr:  result.LeaderAddr,
-		PartitionID: result.PartitionID,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(res)
+	w.WriteHeader(http.StatusOK)
 }

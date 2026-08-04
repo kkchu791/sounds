@@ -58,15 +58,7 @@ func NewController() *Controller {
 		Partitions: make(map[string]*PartitionInfo),
 	}
 }
-
-func (c *Controller) addBroker(id string, addr string) {
-	bi := BrokerInfo{
-		BrokerID:   id,
-		BrokerAddr: addr,
-		LastSeen:   time.Now(),
 	}
-
-	c.Brokers[id] = &bi
 }
 
 func (c *Controller) removeBroker(id string) error {
@@ -79,51 +71,25 @@ func (c *Controller) removeBroker(id string) error {
 	return nil
 }
 
-func (c *Controller) addPartition(bID string, partitionID string) bool {
-	pi, exists := c.Partitions[partitionID]
-
-	if !exists {
-		c.Partitions[partitionID] = &PartitionInfo{
-			LeaderID: bID,
-			ISR:      []string{bID},
-			Replicas: []string{bID},
-		}
-
-		return true // a leader
-	} else {
-		if !slices.Contains(pi.Replicas, bID) {
-			pi.Replicas = append(pi.Replicas, bID)
-		}
-
-		return false // a follower
-	}
-}
-
-func (c *Controller) RegisterBroker(i string, a string, p string) (*RegisterResult, error) {
+func (c *Controller) RegisterBroker(id string, addr string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	// Add Broker
-	c.addBroker(i, a)
 
-	// this usually occurs when adminclient creates a topic.
-	// kafka-topics.sh --create --topic sounds --partitions 3
-	//Add to Partition
-	isLeader := c.addPartition(i, p)
-
-	var leaderAddr string
-	if isLeader {
-		leaderAddr = a
+	_, exists := c.Brokers[id]
+	if exists {
+		return fmt.Errorf("broker already exists")
 	} else {
-		leaderID := c.Partitions[p].LeaderID
-		leaderAddr = c.Brokers[leaderID].BrokerAddr
+		bi := BrokerInfo{
+			BrokerID:   id,
+			BrokerAddr: addr,
+			LastSeen:   time.Now(),
+		}
+
+		c.Brokers[id] = &bi
 	}
 
-	// return something to the handler
-	return &RegisterResult{
-		IsLeader:    isLeader,
-		LeaderAddr:  leaderAddr,
-		PartitionID: p,
-	}, nil
+	return nil
 }
 
 func (c *Controller) UpdateLastSeen(id string) error {
