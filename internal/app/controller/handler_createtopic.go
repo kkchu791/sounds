@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/kkchu791/sounds/internal/domain/model"
+	"github.com/kkchu791/sounds/internal/domain/service"
 )
 
 // request structs
@@ -57,9 +58,9 @@ func (s *Server) CreateTopicHandler(w http.ResponseWriter, r *http.Request) {
 
 		var res Result
 		if err != nil {
-			res = Result{Name: topic.Name, ErrorCode: 1, ErrorMsg: err.Error()}
+			res = Result{Name: topic.Name, ErrorCode: service.ErrInvalidReplicationFactor, ErrorMsg: err.Error()}
 		} else {
-			res = Result{Name: topic.Name, ErrorCode: 0}
+			res = Result{Name: topic.Name, ErrorCode: service.ErrNone}
 		}
 
 		results = append(results, res)

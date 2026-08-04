@@ -1,3 +1,4 @@
+### Setup Nodes and Create a topic
 Run the controller with:
 Terminal 1:
 `go run ./cmd/controller`
@@ -22,8 +23,9 @@ Terminal 4 (admin client):
 
 `export BOOTSTRAP_SERVERS="http://localhost:9001,http://localhost:9002"`
 
-`go run ./cmd/admin -- create-topic --topic Sounds --partitions 6 --replication-factor 3`
+`go run ./cmd/admin -- create-topic --topic Tokyo-Sounds --partitions 6 --replication-factor 3`
 
+### Sending a message to the leader
 1. Append to the leader:
 `curl -X POST localhost:9001/append -H "Content-Type: application/json" -d '{"sound":"rain","key":"outdoor"}'`
 

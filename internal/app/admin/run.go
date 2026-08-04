@@ -11,7 +11,7 @@ import (
 )
 
 func Run(flags []string) error {
-	servers := os.Getenv("BOOTSTRAP_SERVERS") // "localhost:5001", "localhost:5002"
+	servers := os.Getenv("BOOTSTRAP_SERVERS") // "localhost:9001", "localhost:9002"
 	fmt.Println(os.Args[5])
 	tn := os.Args[4]
 	pc, _ := strconv.Atoi(os.Args[6])
@@ -42,6 +42,6 @@ func Run(flags []string) error {
 		fmt.Println(err)
 	}
 
-	fmt.Println(createResp)
+	fmt.Println(createResp, "final thing to look for")
 	return nil
 }

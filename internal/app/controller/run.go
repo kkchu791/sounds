@@ -1,26 +1,24 @@
 package controller
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/kkchu791/sounds/internal/domain/service"
 )
 
 func Run() {
 	server := NewServer()
 	mux := http.NewServeMux()
 
-	ctx := context.Background()
+	//TODO: will bring back for shutting off a node
+	// ctx := context.Background()
 
 	// this is a worker for checking if any broker nodes are dead and handle leader election
-	ac := &service.AliveChecker{
-		Controller: server.Controller,
-		Timeout:    time.Duration(timeout) * time.Second,
-	}
-	go ac.Start(ctx)
+	// ac := &service.AliveChecker{
+	// 	Controller: server.Controller,
+	// 	Timeout:    time.Duration(timeout) * time.Second,
+	// }
+	// go ac.Start(ctx)
 
 	mux.HandleFunc("/register", server.RegisterHandler)
 	mux.HandleFunc("/heartbeat", server.HeartbeatHandler)
