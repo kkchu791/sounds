@@ -3,9 +3,10 @@ package model
 import (
 	"errors"
 	"fmt"
-	"slices"
 	"sync"
 	"time"
+
+	"github.com/kkchu791/sounds/internal/domain/utils"
 )
 
 const NO_LEADER = ""
@@ -13,7 +14,7 @@ const NO_LEADER = ""
 type Controller struct {
 	Brokers    map[string]*BrokerInfo
 	Topics     map[string]*TopicInfo
-	Partitions map[string]*PartitionInfo
+	Partitions map[PartitionName]*PartitionInfo
 	mu         sync.Mutex
 }
 
@@ -35,12 +36,15 @@ type Topic struct {
 	ReplicationFactor int
 }
 
+type PartitionName struct {
+	TopicName   string
+	PartitionId int
+}
+
 type PartitionInfo struct {
-	Topic          string
-	PartitionIndex int
-	LeaderID       string
-	ISR            []string
-	Replicas       []string
+	LeaderID       int
+	ISR            []int
+	Replicas       []int
 	LeaderEpoch    int
 	PartitionEpoch int
 }
@@ -55,20 +59,8 @@ func NewController() *Controller {
 	return &Controller{
 		Brokers:    make(map[string]*BrokerInfo),
 		Topics:     make(map[string]*TopicInfo),
-		Partitions: make(map[string]*PartitionInfo),
+		Partitions: make(map[PartitionName]*PartitionInfo),
 	}
-}
-	}
-}
-
-func (c *Controller) removeBroker(id string) error {
-	if _, exists := c.Brokers[id]; exists {
-		delete(c.Brokers, id)
-	} else {
-		return errors.New("can't delete, no broker found")
-	}
-
-	return nil
 }
 
 func (c *Controller) RegisterBroker(id string, addr string) error {
@@ -107,114 +99,47 @@ func (c *Controller) UpdateLastSeen(id string) error {
 	return nil
 }
 
-func (c *Controller) GetDeadBrokers(timeout time.Duration) []string {
+func (c *Controller) UpdateTopicPartition(topic Topic) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	deadBrokers := make([]string, 0)
+	pc := topic.PartitionCount
+	tn := topic.Name
+	rf := topic.ReplicationFactor
+	bn := len(c.Brokers)
 
-	for id, val := range c.Brokers {
-		// fmt.Printf("this is broker: %v time since last seen value: %v \n", id, time.Since(val.LastSeen))
-		// fmt.Printf("this is the configuration timeout we have: %v \n", timeout)
-		if time.Since(val.LastSeen) > timeout {
-			deadBrokers = append(deadBrokers, id)
-		}
+	if rf > len(c.Brokers) {
+		return fmt.Errorf("rf too large, need to add brokers or decrease rf")
 	}
-
-	fmt.Printf("dead brokers: %v \n", deadBrokers)
-
-	return deadBrokers
-}
-
-func (c *Controller) HandleDeadBroker(brokerID string) (string, string, string, []string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.removeBroker(brokerID)
-
-	// TODO: only handles single partition for now, need to refactor if more partitions are added
-	var bcID string
-	var pID string
-	var isr []string
-	var bcAddr string
-	for id, p := range c.Partitions {
-		c.removeBrokerFromISRAndReplica(p, brokerID)
-
-		if brokerID == p.LeaderID {
-			bcID = c.selectBestCandidate(p, brokerID)
-
-			fmt.Printf("Potential Leader for partition %s changed from %s to %s \n", id, brokerID, bcID)
-			fmt.Printf("Current ISR for partition %s: %v \n", id, p.ISR)
-			fmt.Printf("Current Replicas for partition %s: %v \n", id, p.Replicas)
-		} else {
-			fmt.Printf("Follower %s removed from partition %s. Current ISR: %s and Replicas: %s \n", brokerID, id, p.ISR, p.Replicas)
-		}
-
-		pID = id
-		isr = p.ISR
-	}
-
-	if bcID != "" {
-		bcAddr = c.Brokers[bcID].BrokerAddr
-	}
-
-	return bcID, bcAddr, pID, isr
-
-}
-
-func (c *Controller) removeBrokerFromISRAndReplica(p *PartitionInfo, bID string) {
-	if idx := slices.Index(p.ISR, bID); idx != -1 {
-		p.ISR = slices.Delete(p.ISR, idx, idx+1)
-	}
-
-	// if idx := slices.Index(p.Replicas, bID); idx != -1 {
-	// 	p.Replicas = slices.Delete(p.Replicas, idx, idx+1)
-	// }
-}
-
-func (c *Controller) selectBestCandidate(p *PartitionInfo, bID string) string {
-	var bcID string
-	if len(p.ISR) > 0 {
-		bcID = p.ISR[0]
-	} else if len(p.Replicas) > 0 {
-		for _, r := range p.Replicas {
-			if r != bID && c.isBrokerAlive(r) {
-				bcID = r
-				break
-			}
-		}
-	}
-
-	if bcID == "" {
-		fmt.Println("found no eligible leaders to promote")
-	}
-
-	return bcID
-}
-
-func (c *Controller) isBrokerAlive(bID string) bool {
-	_, exists := c.Brokers[bID]
-	return exists
-}
-
-func (c *Controller) UpdateLeader(bcID, pID string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	pi := c.Partitions[pID]
-	pi.LeaderID = bcID
-
-	fmt.Printf("partition %s's leader has been updated to: %s \n", pID, bcID)
-	fmt.Println("promotion completed, epoch ended")
-}
-
-func (c *Controller) UpdateTopicPartition(topic Topic) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
 
 	c.Topics[topic.Name] = &TopicInfo{
-		Name:              topic.Name,
-		PartitionCount:    topic.PartitionCount,
-		ReplicationFactor: topic.ReplicationFactor,
+		Name:              tn,
+		PartitionCount:    pc,
+		ReplicationFactor: rf,
 	}
+
+	// Do RR + Shift
+	mapPToR := utils.AssignReplicasToBrokers(pc, rf, bn, 0, 0)
+
+	// create the Partition
+	for pId, r := range mapPToR {
+		key := PartitionName{TopicName: tn, PartitionId: pId}
+		value := PartitionInfo{
+			LeaderID:       r[0],
+			Replicas:       r,
+			ISR:            r,
+			LeaderEpoch:    0,
+			PartitionEpoch: 0,
+		}
+
+		c.Partitions[key] = &value
+	}
+	fmt.Println("-----")
+
+	for k, v := range c.Partitions {
+		fmt.Println(k)
+		fmt.Println(*v)
+	}
+
+	return nil
 }

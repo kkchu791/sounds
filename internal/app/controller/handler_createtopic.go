@@ -45,25 +45,25 @@ func (s *Server) CreateTopicHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var results []Result
 	for _, topic := range req.Topics {
-		if topic.ReplicationFactor > len(s.Controller.Brokers) {
-			fmt.Println("rf too large, need to add brokers or decrease rf")
-		}
-
 		mt := model.Topic{
 			Name:              topic.Name,
 			PartitionCount:    topic.PartitionCount,
 			ReplicationFactor: topic.ReplicationFactor,
 		}
 
-		s.Controller.UpdateTopicPartition(mt)
+		err := s.Controller.UpdateTopicPartition(mt)
 
+		var res Result
+		if err != nil {
+			res = Result{Name: topic.Name, ErrorCode: 1, ErrorMsg: err.Error()}
+		} else {
+			res = Result{Name: topic.Name, ErrorCode: 0}
+		}
+
+		results = append(results, res)
 	}
-
-	//just dummy data for now
-	result := Result{Name: "Sounds", ErrorCode: 0}
-
-	results := []Result{result}
 
 	res := CreateTopicsResponse{
 		Results: results,
