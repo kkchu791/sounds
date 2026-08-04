@@ -119,7 +119,7 @@ func (c *Controller) UpdateTopicPartition(topic Topic) error {
 	}
 
 	// Do RR + Shift
-	mapPToR := utils.AssignReplicasToBrokers(pc, rf, bn, 0, 0)
+	mapPToR := utils.AssignReplicasToBrokers(pc, rf, bn, -1, 1)
 
 	// create the Partition
 	for pId, r := range mapPToR {
