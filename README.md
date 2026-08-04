@@ -15,7 +15,7 @@ Terminal 2 (follower):
 Run the follower with:
 Terminal 3 (follower):
 
- `BROKER_ID=broker-2 BROKER_ADDR=localhost:9003 BROKER_PORT=9003 CONTROLLER_ADDR=localhost:9003 go run ./cmd/broker`
+ `BROKER_ID=broker-2 BROKER_ADDR=localhost:9003 BROKER_PORT=9003 CONTROLLER_ADDR=localhost:9000 go run ./cmd/broker`
 
 After brokers are up run admin client:
 Terminal 4 (admin client):
