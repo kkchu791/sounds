@@ -1,0 +1,14 @@
+services:
+  controller:
+    build: { context: ., target: controller }
+    ports: ["9000:9000"]
+
+  broker-0:
+    build: { context: ., target: broker }
+    ports: ["9001:9001"]
+    environment:
+      BROKER_ID: broker-0
+      BROKER_ADDR: broker-0:9001
+      BROKER_PORT: 9001
+      CONTROLLER_ADDR: controller:9000
+    depends_on: [controller]
