@@ -1,0 +1,2 @@
+# things in here won't get built into the image
+.git
