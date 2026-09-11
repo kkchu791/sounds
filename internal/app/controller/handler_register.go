@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -31,5 +32,6 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Printf("hey, this broker just registered: %d", req.BrokerID)
 	w.WriteHeader(http.StatusOK)
 }

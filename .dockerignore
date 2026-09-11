@@ -1,2 +1,8 @@
 # things in here won't get built into the image
+# changing these won't trigger a rebuild
 .git
+.gitignore
+.dockerignore
+*.md
+Dockerfile
+compose.yaml

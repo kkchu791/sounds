@@ -10,21 +10,16 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o /out/controller ./cmd/controller/
+RUN CGO_ENABLED=0 go build -o /out/controller ./cmd/controller/ && \
+    CGO_ENABLED=0 go build -o /out/broker ./cmd/broker
 
-FROM alpine:3.24
-
+FROM alpine:3.24 AS controller
 COPY --from=builder /out/controller /bin/controller
-
+EXPOSE 9000
 CMD ["/bin/controller"]
 
-EXPOSE 9000
+FROM alpine:3.24 AS broker
+COPY --from=builder /out/broker /bin/broker
+CMD ["/bin/broker"]
+EXPOSE 9001
 
-
-# TODO: Move to compose file
-
-# saving for broker env var
-# ENV BROKER_ID="broker-1"
-# ENV BROKER_ADDR="localhost:9002"
-# ENV BROKER_PORT="9002"
-# ENV BROKER_PORT="9002"
